@@ -1,0 +1,4 @@
+.custom-card {
+    border: none; /* Remove all borders */
+    border-bottom: 1px solid #dee2e6; /* Add bottom border */
+}

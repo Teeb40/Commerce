@@ -1,0 +1,44 @@
+{% extends 'auctions/layout.html' %}
+
+{% block body %}
+
+{% if error %}
+<h1>{{ error }}</h1>
+{% else %}
+<h1 class="text-center">Watchlist</h1>
+<div class="container">
+    <div class="row justify-content-center"> <!-- Center the row -->
+        {% for product in products %}
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-4 d-flex align-items-stretch"> <!-- Adjusted to fit 6 cards per row and stretch to full height -->
+            <a href="{% url 'listing' product.title product.id %}" class="text-decoration-none text-dark w-100">
+                <div class="card h-100">
+                    <div class="card-img-container">
+                        <img class="card-img-top" src="{{ product.url.url }}" alt="Card image cap">
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.title }}</h5>
+                        <p class="card-text">{{ product.description }}</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Starting Bid: ${{ product.price }}</li>
+                        <li class="list-group-item">Current Bid: </li>
+                        <li class="list-group-item">On since {{ product.created_at }}</li>
+                    </ul>
+                    <div class="card-body text-center">
+                        <button class="btn btn-primary">Add Bidding</button>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% if not products %}
+<h2 class="text-center">No Items in Watchlist</h2>
+<div class="text-center">
+    <a href="{% url 'index' %}" class="btn btn-secondary">Add Some Items?</a>
+</div>
+{% endif %}
+{% endif %}
+
+{% endblock %}

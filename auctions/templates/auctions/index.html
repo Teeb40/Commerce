@@ -1,0 +1,41 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2 class="text-center">Active Listings</h2>
+
+ 
+    
+    <div class="container">
+        <div class="row d-flex justify-content-center">
+            {% for listing in listings %}
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-4 d-flex"> <!-- Adjusted to fit 5 cards per row -->
+                    <a href="{% url 'listing' listing.title listing.id %}" class="text-decoration-none text-dark w-100">
+                        <div class="card h-100">
+                            <div class="card-img-container">
+                                {% if listing.url %}
+                                    <img class="card-img-top" src="{{ listing.url.url }}" alt="Card image cap">
+                                {% else %}
+                                    <p class="text-center">No Image available</p>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">{{ listing.title }}</h5>
+                                <p class="card-text">{{ listing.description }}</p>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">Starting Bid: ${{ listing.price }}</li>
+                                <li class="list-group-item">Current Bid: </li>
+                                <li class="list-group-item">On since {{ listing.created_at }}</li>
+                            </ul>
+                            <div class="card-body text-center">
+                                <button class="btn btn-primary">Add Bidding</button>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% empty %}
+            <h3 class="text-center">No Listings <a href="{% url 'create' %}">Be the First?</a></h3>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

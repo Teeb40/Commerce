@@ -1,0 +1,68 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+{% if not_filled %}
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <strong>{{ not_filled }}</strong> You should check in on some of those fields below.
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+{% endif %}
+
+<form id="uploadForm" action="{% url 'create' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <div class="input-group flex-nowrap">
+        <span class="input-group-text" id="addon-wrapping">Product</span>
+        <input type="text" class="form-control" placeholder="Name" aria-label="Username" aria-describedby="addon-wrapping" name="title" maxlength="20">
+    </div>
+
+    <div class="form-floating">
+        <textarea class="form-control" placeholder="Leave a Description here" id="floatingTextarea2" style="height: 100px" name="description" maxlength="100"></textarea>
+    </div>
+
+    <div class="input-group mb-3">
+        <span class="input-group-text">$</span>
+        <span class="input-group-text">0.00</span>
+        <input type="number" onchange="setTwoNumberDecimal()" class="form-control" aria-label="Dollar amount (with dot and two decimal places)" name="price" min="1.00" max="999.99" step="0.01">
+    </div>
+  
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <label class="input-group-text" for="inputGroupSelect01">Options</label>
+        </div>
+        <select class="custom-select" id="inputGroupSelect01" name="category">
+            <option selected>Select Category</option>
+            <option value="Mobile phones">Mobile phones</option>
+            <option value="Game consoles">Game consoles</option>
+            <option value="Household furniture">Household furniture</option>
+            <option value="Home appliances">Home appliances</option>
+            <option value="Clothing">Clothing</option>
+            <option value="Snow Sports">Snow Sports</option>
+            <option value="Camping & Hiking">Camping & Hiking</option>
+            <option value="Yard Games">Yard Games</option>
+            <option value="Moisturizers">Moisturizers</option>
+            <option value="Masks">Masks</option>
+            <option value="Exfoliators">Exfoliators</option>
+            <option value="Serums">Serums</option>
+            <option value="Automotive & Powersports">Automotive & Powersports</option>
+            <option value="Baby Products">Baby Products</option>
+            <option value="Camera & Photo">Camera & Photo</option>
+            <option value="Fine Art">Fine Art</option>
+            <option value="Grocery & Gourmet Foods">Grocery & Gourmet Foods</option>
+        </select>
+    </div>
+
+    <div id="errorMessage"></div>
+
+    <div>
+        <label for="formFileLg" class="form-label">Image of Item Listed</label>
+        <input class="form-control form-control-lg" id="formFileLg" type="file" name="url">
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg btn-block">Post Listing</button>
+</form>
+
+
+{% endblock %}
