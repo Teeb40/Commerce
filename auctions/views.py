@@ -11,6 +11,8 @@ import io
 
 
 def index(request):
+    if request.method == 'POST':
+        bid = request.POST.get('bid')
     placed_listings = Placed.objects.all()
     return render(request, "auctions/index.html",{"listings":placed_listings})
 
@@ -98,38 +100,37 @@ def create(request):
 def listing(request, title,id):
     user = request.user
     username = request.user.username
-    # Redirect to login if user is not authenticated
+
     if not user.is_authenticated:
         return HttpResponseRedirect(reverse("login"))
 
-    # Fetch the listing info
+
     info = Placed.objects.filter(title=title, id=id)
     if not info.exists():
         no_listing = "Page Not Found"
         return render(request, "auctions/listing.html", {"no_listing": no_listing})
 
-    # Initialize variables
+   
     wishlist_item = None
     is_added = "Add to Wishlist"
 
-    # Handle POST request
+    
     if request.method == 'POST':
         item_id = request.POST.get('wishlist')
         if item_id:
-            item_id = int(item_id)  # Ensure item_id is an integer
+            item_id = int(item_id)  
             wishlist_item, created = Wishlist.objects.get_or_create(item_id=item_id, item_title=title)
             if user.wishlist.filter(id=wishlist_item.id).exists():
-                # Remove the item from the wishlist
                 user.wishlist.remove(wishlist_item)
                 is_added = "Add to Watchlist"
                 return HttpResponseRedirect(reverse("wishlist",args={f'{username}': username}))
             else:
-                # Add the item to the wishlist
+                
                 user.wishlist.add(wishlist_item)
                 is_added = "Remove from Wishlist"
                 return HttpResponseRedirect(reverse("wishlist",args={f'{username}': username}))
     else:
-        # For GET request, check if the item is already in the wishlist
+        
         wishlist_item = Wishlist.objects.filter(item_id=id, item_title=title).first()
         if wishlist_item and user.wishlist.filter(id=wishlist_item.id).exists():
             is_added = "Remove from Watchlist"
@@ -137,27 +138,26 @@ def listing(request, title,id):
     return render(request, "auctions/listing.html", {"listings": info, "is_added": is_added})
 
 def wishlist(request,username):
-    # Redirect to login if user is not authenticated
+
     if not request.user.is_authenticated:
         return HttpResponseRedirect(reverse("login"))
 
-    # Fetch the user info
     try:
         user_info = User.objects.get(username=username)
     except User.DoesNotExist:
         return render(request, "auctions/wishlist.html", {"error": "User Not Found"})
 
-    # Check if the username in the URL matches the signed-in user
+ 
     if username != request.user.username:
         return render(request, "auctions/wishlist.html", {"error": "User Not Found"})
 
-    # Fetch wishlist items for the user
+
     wishlist_items = request.user.wishlist.all()
 
-    # Extract the IDs from the wishlist items
+ 
     wish_ids = wishlist_items.values_list('item_id', flat=True)
 
-    # Fetch all Placed objects that match the list of IDs
+    
     products = Placed.objects.filter(id__in=wish_ids)
 
     return render(request, "auctions/wishlist.html", {"products": products})

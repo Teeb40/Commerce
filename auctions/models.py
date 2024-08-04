@@ -8,9 +8,13 @@ class Wishlist(models.Model):
         item_title = models.CharField(max_length=100)
         def __str__(self):
              return f"{self.item_id}"
+class Bids(models.Model):
+    item = models.IntegerField(default=0)
+    amount = models.IntegerField(default=0)
 
 class User(AbstractUser):
     wishlist = models.ManyToManyField(Wishlist,blank=True,related_name="items")
+    bids = models.ManyToManyField(Bids,blank=True,related_name="bid")
 
 
 
@@ -28,8 +32,7 @@ class Placed(models.Model):
 
     
 
-class Bids(models.Model):
-    ...
+
 
 
 class Comments(models.Model):
