@@ -41,7 +41,11 @@
                         <p class="card-text">{{ listing.description }}</p>
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item border-0">Starting Bid: ${{ listing.price }}</li>
-                            <li class="list-group-item border-0">Current Bid: </li>
+                            {% if listing.current_bid %}
+                            <li class="list-group-item border-0">Current Bid: ${{listing.current_bid}} </li>
+                            {% else %}
+                            <li class="list-group-item border-0">Current Bid: N\A </li>
+                            {% endif %}
                             <li class="list-group-item border-0">On since {{ listing.created_at }}</li>
                             <li class="list-group-item border-0">
                                 <form id="wishlistForm{{ listing.id }}" action="{% url 'listing' listing.title listing.id %}" method="post">
@@ -56,7 +60,13 @@
                                 <div class="input-group mb-3">
                                     <span class="input-group-text">$</span>
                                     <span class="input-group-text">0.00</span>
+                                    {% if min_bid %}
+                                    <input name="bid" type="number" onchange="setTwoNumberDecimal()" class="form-control" aria-label="Dollar amount (with dot and two decimal places)" min="{{ min_bid }}" max="999.99" step="0.01">
+                                    {% else %}
                                     <input name="bid" type="number" onchange="setTwoNumberDecimal()" class="form-control" aria-label="Dollar amount (with dot and two decimal places)" min="{{ listing.price }}" max="999.99" step="0.01">
+                                    {% endif %}
+                                    <input type="hidden" value="{{ listing.id }}" name="item_id">
+                                    <input type="hidden" value="{{ user.username }}" name="username">
                                     <button type="submit" class="btn btn-danger">Place Bid</button>
                                 </div>
                             </form>

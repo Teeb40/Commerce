@@ -10,8 +10,9 @@ class Wishlist(models.Model):
              return f"{self.item_id}"
 class Bids(models.Model):
     item = models.IntegerField(default=0)
-    amount = models.IntegerField(default=0)
-
+    amount = models.FloatField(default=0)
+    username = models.CharField(max_length=100)
+    
 class User(AbstractUser):
     wishlist = models.ManyToManyField(Wishlist,blank=True,related_name="items")
     bids = models.ManyToManyField(Bids,blank=True,related_name="bid")
@@ -25,7 +26,8 @@ class Placed(models.Model):
     price = models.FloatField(validators=[MinValueValidator(1.00)])
     category = models.CharField(max_length=100,validators=[MinLengthValidator(1)])
     url = models.ImageField(upload_to='images/', blank=True, default='No Image')  
-    created_at = models.DateTimeField(auto_now_add=True)  
+    created_at = models.DateTimeField(auto_now_add=True)
+    current_bid = models.FloatField()
     def __str__(self):
         return f"{self.title}"
 

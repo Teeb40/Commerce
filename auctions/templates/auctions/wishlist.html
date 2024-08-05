@@ -21,7 +21,11 @@
                     </div>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">Starting Bid: ${{ product.price }}</li>
-                        <li class="list-group-item">Current Bid: </li>
+                        {% if product.current_bid %}
+                        <li class="list-group-item">Current Bid: ${{ product.current_bid }}</li>
+                        {% else %}
+                        <li class="list-group-item">Current Bid: N/A</li>
+                        {% endif %}
                         <li class="list-group-item">On since {{ product.created_at }}</li>
                     </ul>
                     <div class="card-body text-center">

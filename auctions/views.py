@@ -5,6 +5,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from .models import User,Bids,Placed,Comments,Wishlist
+from django.shortcuts import render, get_object_or_404
 import requests
 from PIL import Image
 import io 
@@ -12,7 +13,37 @@ import io
 
 def index(request):
     if request.method == 'POST':
-        bid = request.POST.get('bid')
+        bid_amount = request.POST.get('bid')
+        item_id = request.POST.get('item_id')
+        username = request.POST.get('username')
+        user = request.user
+        
+        # Ensure bid_amount is converted to the correct type if needed (e.g., float or decimal)
+        try:
+            bid_amount = float(bid_amount)
+        except ValueError:
+            return render(request, "auctions/error.html", {"error": "Invalid bid amount"})
+
+        # Check if the bid already exists
+        if Bids.objects.filter(item=item_id, username=username, amount=bid_amount).exists():
+            return render(request, "auctions/error.html", {"error": "Bid Already Placed"})
+
+        # Create a new bid
+        current_bid = Bids.objects.create(item=item_id, amount=bid_amount, username=username)
+
+        # Fetch the item and update its current bid
+        item = get_object_or_404(Placed, id=item_id)
+        item.current_bid = current_bid.amount
+        item.save()  # Don't forget to save changes
+
+        # Add the bid to the user's bids (assuming there's a many-to-many relationship)
+        if hasattr(user, 'bids'):
+            user.bids.add(current_bid)
+
+    # Fetch all placed listings
+    placed_listings = Placed.objects.all()
+    return render(request, "auctions/index.html", {"listings": placed_listings})
+    
     placed_listings = Placed.objects.all()
     return render(request, "auctions/index.html",{"listings":placed_listings})
 
@@ -100,7 +131,12 @@ def create(request):
 def listing(request, title,id):
     user = request.user
     username = request.user.username
-
+    bid = Bids.objects.filter(item=id)
+    id_ = id
+    item = Placed.objects.get(id=id_)
+    if item.current_bid:
+        min_bid = item.current_bid + 0.01
+    
     if not user.is_authenticated:
         return HttpResponseRedirect(reverse("login"))
 
@@ -134,8 +170,10 @@ def listing(request, title,id):
         wishlist_item = Wishlist.objects.filter(item_id=id, item_title=title).first()
         if wishlist_item and user.wishlist.filter(id=wishlist_item.id).exists():
             is_added = "Remove from Watchlist"
-
-    return render(request, "auctions/listing.html", {"listings": info, "is_added": is_added})
+    if not item.current_bid:
+        return render(request, "auctions/listing.html", {"listings": info, "is_added": is_added})
+    else:
+        return render(request, "auctions/listing.html", {"listings": info, "min_bid": min_bid,"is_added": is_added})
 
 def wishlist(request,username):
 
