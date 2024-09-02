@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, login, logout
+from django.db.models import Max
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
@@ -12,12 +13,27 @@ import io
 
 
 def index(request):
+    user = get_object_or_404(User, username=request.user.username)
+    winning_bids = user.winning_bids.all()
+    winning_items = []
+    for bid in winning_bids:
+        try:
+            # Retrieve the corresponding item in the Placed model
+            item = Placed.objects.get(id=bid.item)
+            winning_items.append(item)  # Add the item to the list
+        except Placed.DoesNotExist:
+            pass 
+    
+    
+
+            
+    # Create a dictionary to map item IDs to Placed objects for easy lookup
+
     if request.method == 'POST':
         bid_amount = request.POST.get('bid')
         item_id = request.POST.get('item_id')
         username = request.POST.get('username')
         user = request.user
-        
         # Ensure bid_amount is converted to the correct type if needed (e.g., float or decimal)
         try:
             bid_amount = float(bid_amount)
@@ -42,11 +58,8 @@ def index(request):
 
     # Fetch all placed listings
     placed_listings = Placed.objects.all()
-    return render(request, "auctions/index.html", {"listings": placed_listings})
+    return render(request, "auctions/index.html", {"listings": placed_listings,"winnings":winning_items})
     
-    placed_listings = Placed.objects.all()
-    return render(request, "auctions/index.html",{"listings":placed_listings})
-
 
 def login_view(request):
     if request.method == "POST":
@@ -104,28 +117,41 @@ def create(request):
         return HttpResponseRedirect(reverse("login"))
     else:
         if request.method == 'POST':
-                title = str(request.POST.get('title')).strip().title()
-                description = str(request.POST.get('description')).strip()
-                price = request.POST.get('price')
-                category = request.POST.get('category')
-                url = request.FILES.get('url')
-                listings_ = Placed(title=title, description=description, price=price,category=category,url=url)
-                if str(url).lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif')):
-                    print(title,description,price,category,url)
-                else:
-                    return render(request, "auctions/create_listing.html", {"not_filled": "Not a Valid Image File"})
-                try:
-                    listings_.full_clean()  
-                    listings_.save()
-                    return HttpResponseRedirect(reverse('index'))
-                except ValidationError:
-                    if len(description) > 100:
-                        return render(request, "auctions/create_listing.html", {"not_filled": "Keep Description Below 100 Characters"})
-                    elif len(title) > 20:
-                        return render(request, "auctions/create_listing.html", {"not_filled": "Keep Name Below 64 Characters"})
+            title = str(request.POST.get('title')).strip().title()
+            description = str(request.POST.get('description')).strip()
+            price = request.POST.get('price')
+            category = request.POST.get('category')
+            url = request.FILES.get('url')
+            user = request.user
 
-                    return render(request, "auctions/create_listing.html", {"not_filled": "Fields Missing"})
-        
+            # Attempt to convert price to float to ensure it is the correct type
+            try:
+                price = float(price)
+            except ValueError:
+                return render(request, "auctions/create_listing.html", {"not_filled": "Price must be a number"})
+
+            # Create the listing instance
+            listings_ = Placed(title=title, description=description, price=price, category=category, url=url, user=user)
+
+            # Validate the image file extension
+            if url and not str(url).lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif')):
+                return render(request, "auctions/create_listing.html", {"not_filled": "Not a Valid Image File"})
+
+            try:
+                listings_.full_clean()  
+                listings_.save()
+                return HttpResponseRedirect(reverse('index'))
+            except ValidationError as e:
+                errors = e.message_dict
+                error_message = "Fields Missing"
+                if 'description' in errors and len(description) > 100:
+                    error_message = "Keep Description Below 100 Characters"
+                elif 'title' in errors and len(title) > 20:
+                    error_message = "Keep Name Below 20 Characters"
+                else:
+                    error_message = errors
+                return render(request, "auctions/create_listing.html", {"not_filled": error_message})
+
         return render(request, "auctions/create_listing.html")
     
 def listing(request, title,id):
@@ -171,9 +197,9 @@ def listing(request, title,id):
         if wishlist_item and user.wishlist.filter(id=wishlist_item.id).exists():
             is_added = "Remove from Watchlist"
     if not item.current_bid:
-        return render(request, "auctions/listing.html", {"listings": info, "is_added": is_added})
+        return render(request, "auctions/listing.html", {"listings": info, "is_added": is_added,"user":user})
     else:
-        return render(request, "auctions/listing.html", {"listings": info, "min_bid": min_bid,"is_added": is_added})
+        return render(request, "auctions/listing.html", {"listings": info, "min_bid": min_bid,"is_added": is_added,"user":user})
 
 def wishlist(request,username):
 
@@ -199,3 +225,31 @@ def wishlist(request,username):
     products = Placed.objects.filter(id__in=wish_ids)
 
     return render(request, "auctions/wishlist.html", {"products": products})
+
+
+
+def your_listings(request,username):
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect(reverse("login"))
+
+    if request.method == "POST":
+        item = request.POST.get("remove")
+        listing_ = Placed.objects.get(id=item)
+        listing_.closed = True
+        listing_.save()
+    
+        if listing_.current_bid is not None and listing_.closed:
+            bid = Bids.objects.get(item=listing_.id,amount=listing_.current_bid)
+            user = User.objects.get(username=bid.name)
+            user.winning_bids.add(bid)
+
+
+        return HttpResponseRedirect(reverse("your_listings", args=[username]))
+
+    user = get_object_or_404(User, username=username)
+    listings = Placed.objects.filter(user=user)
+
+    return render(request, "auctions/your_listing.html", {"listings": listings})
+
+def search(request):
+    return render(request, "auctions/search.html", {})

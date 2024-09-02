@@ -2,9 +2,10 @@
 
 {% block body %}
 {% if not_filled %}
+
 <div class="alert alert-warning alert-dismissible fade show" role="alert">
-    <strong>{{ not_filled }}</strong> You should check in on some of those fields below.
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <strong>{{ not_filled }}!</strong> You should check in on some of those fields below.
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close" onclick="hide()">
       <span aria-hidden="true">&times;</span>
     </button>
 </div>
@@ -60,7 +61,7 @@
         <label for="formFileLg" class="form-label">Image of Item Listed</label>
         <input class="form-control form-control-lg" id="formFileLg" type="file" name="url">
     </div>
-
+        <input type="hidden" value="{{user}}" name="user">
     <button type="submit" class="btn btn-primary btn-lg btn-block">Post Listing</button>
 </form>
 

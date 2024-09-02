@@ -11,11 +11,17 @@ class Wishlist(models.Model):
 class Bids(models.Model):
     item = models.IntegerField(default=0)
     amount = models.FloatField(default=0)
-    username = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
+    def __str__(self):
+         return f"{self.amount}"
     
 class User(AbstractUser):
     wishlist = models.ManyToManyField(Wishlist,blank=True,related_name="items")
     bids = models.ManyToManyField(Bids,blank=True,related_name="bid")
+    winning_bids = models.ManyToManyField(Bids,blank=True,related_name="winning_bid")
+
+    def __str__(self):
+         return f"Username:{self.username} Email: {self.email} winnings: {self.winning_bids}"
 
 
 
@@ -27,7 +33,9 @@ class Placed(models.Model):
     category = models.CharField(max_length=100,validators=[MinLengthValidator(1)])
     url = models.ImageField(upload_to='images/', blank=True, default='No Image')  
     created_at = models.DateTimeField(auto_now_add=True)
-    current_bid = models.FloatField()
+    current_bid = models.FloatField(blank=True,null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    closed = models.BooleanField(default=False)
     def __str__(self):
         return f"{self.title}"
 

@@ -1,22 +1,12 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-{%if user.winning_bids%}
-    {% for bid in winnings%}
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <strong>Congratulations!</strong> You have won <a href="{% url 'listing' bid.title bid.id %}">{{ bid.title }}</a> for {{ bid.current_bid }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>    
-    {% endfor %}
-{% endif%}
-<h2 class="text-center">Active Listings</h2>
-    <div class="container">
-        <div class="row d-flex justify-content-center">
+<div class="container">
+    <div class="row d-flex justify-content-center">
+        {% if listings %}
             {% for listing in listings %}
-            {% if listing.closed %}
-            {%else%}
+                {% if listing.closed %}
+                {%  else%}
                 <div class="col-lg-2 col-md-4 col-sm-6 mb-4 d-flex"> <!-- Adjusted to fit 5 cards per row -->
                     <a href="{% url 'listing' listing.title listing.id %}" class="text-decoration-none text-dark w-100">
                         <div class="card h-100">
@@ -33,23 +23,27 @@
                             </div>
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item">Starting Bid: ${{ listing.price }}</li>
-                                {% if listing.current_bid%}
-                                <li class="list-group-item">Current Bid: ${{listing.current_bid}}</li>
+                                {% if listing.current_bid %}
+                                    <li class="list-group-item">Current Bid: ${{ listing.current_bid }}</li>
                                 {% else %}
-                                <li class="list-group-item">Current Bid: N/A</li>
+                                    <li class="list-group-item">Current Bid: N/A</li>
                                 {% endif %}
                                 <li class="list-group-item">On since {{ listing.created_at }}</li>
                             </ul>
-                            <div class="card-body text-center">
-                                <button class="btn btn-primary">Add Bidding</button>
-                            </div>
+                            <form action="{% url 'your_listings' user.username %}" method="post">
+                                {% csrf_token %}
+                                <div class="card-body text-center">
+                                    <button class="btn btn-primary" name="remove" value="{{ listing.id }}">Remove Listing</button>
+                                </div>
+                            </form>
                         </div>
                     </a>
                 </div>
-            {% empty %}
-            <h3 class="text-center">No Listings <a href="{% url 'create' %}">Be the First?</a></h3>
+                {%endif%}
             {% endfor %}
-            {%endif%}
-        </div>
+        {% else %}
+            <h1>No listings placed</h1>
+        {% endif %}
     </div>
+</div>
 {% endblock %}

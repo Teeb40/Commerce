@@ -4,6 +4,34 @@
 {% block title %}{{ info.title }}{% endblock %}
 {% block styles %}
 <link rel="stylesheet" href="{% static 'auctions/style_listing.css' %}">
+<style>
+    .btn.btn-outline-primary{
+        margin-left: 10px;
+    }
+</style>
+<script>
+
+function changeLike(){
+    let likes = localStorage.getItem("likes") || 0
+    console.log(likes)
+    // get the innerHTML for like and dislike
+    let likeElement = document.getElementById("js-like-button")
+    // change the Inner HTML for like and dislike
+    if (likeElement.innerHTML == '<button type="button" class="btn btn-outline-primary">Like</button>'){
+        likeElement.innerHTML = '<button type="button" class="btn btn-primary">Like</button>'
+        likes++
+        localStorage.setItem("likes",`${likes}`)
+    }
+    else{
+        likeElement.innerHTML = '<button type="button" class="btn btn-outline-primary">Like</button>'
+        likes--
+        localStorage.setItem("likes",`${likes}`)
+
+    }
+    // add the like or dislike to the like or dislike count
+    // store the count
+}
+</script>
 {% endblock %}
 
 {% block body %}
@@ -29,6 +57,11 @@
 {% else %}
 <div class="container mt-5">
     {% for listing in listings %}
+    {%if listing.closed%}
+    <div class="alert alert-info" role="alert">
+        This listing is closed. Would you like to return to <a href="{% url 'index' %}" class="alert-link">active listings?</a>
+    </div>
+    {% endif %}
     <div class="row d-flex justify-content-center">
         <div class="col-12 mb-4 d-flex justify-content-center"> <!-- Center the card -->
             <div class="card custom-card h-100"> <!-- Added custom class -->
@@ -67,7 +100,17 @@
                                     {% endif %}
                                     <input type="hidden" value="{{ listing.id }}" name="item_id">
                                     <input type="hidden" value="{{ user.username }}" name="username">
-                                    <button type="submit" class="btn btn-danger">Place Bid</button>
+                                    {% if user == listing.user %}
+                                    <span class="d-inline-block" data-toggle="popover" data-content="Disabled popover">
+                                        <button class="btn btn-danger" style="pointer-events: none;" type="button" data-toggle="tooltip" data-placement="right" title="You cannot Place bids on items you have listed" disabled>Place Bid</button>
+                                    </span>
+                                    {%elif listing.closed %}
+                                    <span class="d-inline-block" data-toggle="popover" data-content="Disabled popover">
+                                        <button class="btn btn-danger" style="pointer-events: none;" type="button" data-toggle="tooltip" data-placement="right" title="Listing is closed" disabled>Place Bid</button>
+                                    </span>
+                                    {% else %}
+                                    <button type="submit" aria-disabled="true" class="btn btn-danger" data-toggle="tooltip" data-placement="right" title="Press this to place bid">Place Bid</button>
+                                    {% endif %}
                                 </div>
                             </form>
                         </div>
@@ -82,13 +125,13 @@
     <div class="card-header">
         <ul class="nav nav-pills card-header-pills">
             <li class="nav-item">
-                <a class="nav-link active" href="#">Comment</a>
+                <button type="button" class="btn btn-primary">Comment</button>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">Like</a>
+            <li class="nav-item" id="js-like-button">
+                <button type="button" class="btn btn-outline-primary" onclick="changeLike()">Like</button>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">Dislike</a>
+            <li class="nav-item" id="js-dislike-button">
+                <button type="button" class="btn btn-outline-primary">Dislike</button>
             </li>
         </ul>
     </div>
