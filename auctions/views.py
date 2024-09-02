@@ -159,49 +159,67 @@ def create(request):
 def listing(request, title,id):
     user = request.user
     username = request.user.username
+    item = get_object_or_404(Placed, id=id)  # Use get_object_or_404 for safety
     bid = Bids.objects.filter(item=id)
-    id_ = id
-    item = Placed.objects.get(id=id_)
+
+    # Calculate minimum bid
     if item.current_bid:
         min_bid = item.current_bid + 0.01
-    
+    else:
+        min_bid = item.price + 0.01  # Fallback if no current bid
+
     if not user.is_authenticated:
         return HttpResponseRedirect(reverse("login"))
 
-
-    info = Placed.objects.filter(title=title, id=id)
-    if not info.exists():
+    # Check if the listing exists
+    if not Placed.objects.filter(title=title, id=id).exists():
         no_listing = "Page Not Found"
         return render(request, "auctions/listing.html", {"no_listing": no_listing})
 
-   
+    # Handle Wishlist logic
     wishlist_item = None
     is_added = "Add to Wishlist"
-
     
     if request.method == 'POST':
         item_id = request.POST.get('wishlist')
+        comment = request.POST.get('comment')
+        
         if item_id:
             item_id = int(item_id)  
             wishlist_item, created = Wishlist.objects.get_or_create(item_id=item_id, item_title=title)
             if user.wishlist.filter(id=wishlist_item.id).exists():
                 user.wishlist.remove(wishlist_item)
-                is_added = "Add to Watchlist"
-                return HttpResponseRedirect(reverse("wishlist",args={f'{username}': username}))
+                is_added = "Add to Wishlist"
+                return HttpResponseRedirect(reverse("wishlist", args=[username]))
             else:
-                
                 user.wishlist.add(wishlist_item)
                 is_added = "Remove from Wishlist"
-                return HttpResponseRedirect(reverse("wishlist",args={f'{username}': username}))
+                return HttpResponseRedirect(reverse("wishlist", args=[username]))
+
+        elif comment:
+            # Create a new comment and associate it with the listing
+            comment_ = Comments.objects.create(name=request.user.id, comment=comment,name_commentor=username)
+            item.comments.add(comment_)
+            return HttpResponseRedirect(reverse("listing", args=[title, id]))  # Redirect to the same page to avoid resubmission
+
     else:
-        
         wishlist_item = Wishlist.objects.filter(item_id=id, item_title=title).first()
         if wishlist_item and user.wishlist.filter(id=wishlist_item.id).exists():
-            is_added = "Remove from Watchlist"
-    if not item.current_bid:
-        return render(request, "auctions/listing.html", {"listings": info, "is_added": is_added,"user":user})
-    else:
-        return render(request, "auctions/listing.html", {"listings": info, "min_bid": min_bid,"is_added": is_added,"user":user})
+            is_added = "Remove from Wishlist"
+
+    # Get all comments for the listing
+    comments = item.comments.all()
+
+    # Render the template with the listing and comments
+    context = {
+        "listings": [item],  # Assuming this is a queryset, wrap it in a list
+        "min_bid": min_bid,
+        "is_added": is_added,
+        "user": user,
+        "comments": comments
+    }
+    
+    return render(request, "auctions/listing.html", context)
 
 def wishlist(request,username):
 

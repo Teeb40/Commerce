@@ -55,70 +55,71 @@ function changeLike(){
     </div>
 </section>
 {% else %}
-<div class="container mt-5">
-    {% for listing in listings %}
-    {%if listing.closed%}
-    <div class="alert alert-info" role="alert">
-        This listing is closed. Would you like to return to <a href="{% url 'index' %}" class="alert-link">active listings?</a>
-    </div>
-    {% endif %}
-    <div class="row d-flex justify-content-center">
-        <div class="col-12 mb-4 d-flex justify-content-center"> <!-- Center the card -->
-            <div class="card custom-card h-100"> <!-- Added custom class -->
-                <div class="p-0">
-                    <img class="card-img img-fluid" src="{{ listing.url.url }}" alt="Card image">
-                </div>
-                <div class="d-flex flex-column">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ listing.title }}</h5>
-                        <p class="card-text">{{ listing.description }}</p>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item border-0">Starting Bid: ${{ listing.price }}</li>
-                            {% if listing.current_bid %}
-                            <li class="list-group-item border-0">Current Bid: ${{listing.current_bid}} </li>
-                            {% else %}
-                            <li class="list-group-item border-0">Current Bid: N\A </li>
-                            {% endif %}
-                            <li class="list-group-item border-0">On since {{ listing.created_at }}</li>
-                            <li class="list-group-item border-0">
-                                <form id="wishlistForm{{ listing.id }}" action="{% url 'listing' listing.title listing.id %}" method="post">
+    <div class="container mt-5">
+        {% for listing in listings %}
+        {%if listing.closed%}
+        <div class="alert alert-info" role="alert">
+            This listing is closed. Would you like to return to <a href="{% url 'index' %}" class="alert-link">active listings?</a>
+        </div>
+        {% endif %}
+        <div class="row d-flex justify-content-center">
+            <div class="col-12 mb-4 d-flex justify-content-center"> <!-- Center the card -->
+                <div class="card custom-card h-100"> <!-- Added custom class -->
+                    <div class="p-0">
+                        <img class="card-img img-fluid" src="{{ listing.url.url }}" alt="Card image">
+                    </div>
+                    <div class="d-flex flex-column">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ listing.title }}</h5>
+                            <p class="card-text">{{ listing.description }}</p>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item border-0">Starting Bid: ${{ listing.price }}</li>
+                                {% if listing.current_bid %}
+                                <li class="list-group-item border-0">Current Bid: ${{listing.current_bid}} </li>
+                                {% else %}
+                                <li class="list-group-item border-0">Current Bid: N\A </li>
+                                {% endif %}
+                                <li class="list-group-item border-0">On since {{ listing.created_at }}</li>
+                                <li class="list-group-item border-0">
+                                    <form id="wishlistForm{{ listing.id }}" action="{% url 'listing' listing.title listing.id %}" method="post">
+                                        {% csrf_token %}
+                                        <button value="{{ listing.id }}" type="submit" onclick="" class="btn btn-dark" name="wishlist">{{ is_added }}</button>
+                                    </form>
+                                </li>
+                            </ul>
+                            <div class="mt-3">
+                                <form id="bidForm{{ listing.id }}" action="{% url 'index' %}" method="post">
                                     {% csrf_token %}
-                                    <button value="{{ listing.id }}" type="submit" onclick="" class="btn btn-dark" name="wishlist">{{ is_added }}</button>
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">0.00</span>
+                                        {% if min_bid %}
+                                        <input name="bid" type="number" onchange="setTwoNumberDecimal()" class="form-control" aria-label="Dollar amount (with dot and two decimal places)" min="{{ min_bid }}" max="999.99" step="0.01">
+                                        {% else %}
+                                        <input name="bid" type="number" onchange="setTwoNumberDecimal()" class="form-control" aria-label="Dollar amount (with dot and two decimal places)" min="{{ listing.price }}" max="999.99" step="0.01">
+                                        {% endif %}
+                                        <input type="hidden" value="{{ listing.id }}" name="item_id">
+                                        <input type="hidden" value="{{ user.username }}" name="username">
+                                        {% if user == listing.user %}
+                                        <span class="d-inline-block" data-toggle="popover" data-content="Disabled popover">
+                                            <button class="btn btn-danger" style="pointer-events: none;" type="button" data-toggle="tooltip" data-placement="right" title="You cannot Place bids on items you have listed" disabled>Place Bid</button>
+                                        </span>
+                                        {%elif listing.closed %}
+                                        <span class="d-inline-block" data-toggle="popover" data-content="Disabled popover">
+                                            <button class="btn btn-danger" style="pointer-events: none;" type="button" data-toggle="tooltip" data-placement="right" title="Listing is closed" disabled>Place Bid</button>
+                                        </span>
+                                        {% else %}
+                                        <button type="submit" aria-disabled="true" class="btn btn-danger" data-toggle="tooltip" data-placement="right" title="Press this to place bid">Place Bid</button>
+                                        {% endif %}
+                                    </div>
                                 </form>
-                            </li>
-                        </ul>
-                        <div class="mt-3">
-                            <form id="bidForm{{ listing.id }}" action="{% url 'index' %}" method="post">
-                                {% csrf_token %}
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text">$</span>
-                                    <span class="input-group-text">0.00</span>
-                                    {% if min_bid %}
-                                    <input name="bid" type="number" onchange="setTwoNumberDecimal()" class="form-control" aria-label="Dollar amount (with dot and two decimal places)" min="{{ min_bid }}" max="999.99" step="0.01">
-                                    {% else %}
-                                    <input name="bid" type="number" onchange="setTwoNumberDecimal()" class="form-control" aria-label="Dollar amount (with dot and two decimal places)" min="{{ listing.price }}" max="999.99" step="0.01">
-                                    {% endif %}
-                                    <input type="hidden" value="{{ listing.id }}" name="item_id">
-                                    <input type="hidden" value="{{ user.username }}" name="username">
-                                    {% if user == listing.user %}
-                                    <span class="d-inline-block" data-toggle="popover" data-content="Disabled popover">
-                                        <button class="btn btn-danger" style="pointer-events: none;" type="button" data-toggle="tooltip" data-placement="right" title="You cannot Place bids on items you have listed" disabled>Place Bid</button>
-                                    </span>
-                                    {%elif listing.closed %}
-                                    <span class="d-inline-block" data-toggle="popover" data-content="Disabled popover">
-                                        <button class="btn btn-danger" style="pointer-events: none;" type="button" data-toggle="tooltip" data-placement="right" title="Listing is closed" disabled>Place Bid</button>
-                                    </span>
-                                    {% else %}
-                                    <button type="submit" aria-disabled="true" class="btn btn-danger" data-toggle="tooltip" data-placement="right" title="Press this to place bid">Place Bid</button>
-                                    {% endif %}
-                                </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+
     {% endfor %}
 </div>
 <div class="card text-center">
@@ -140,26 +141,27 @@ function changeLike(){
         <form id="commentForm" action="" method="post">
             {% csrf_token %}
             <div class="form-floating">
-                <textarea class="form-control" placeholder="Leave a Description here" id="floatingTextarea2" style="height: 100px" name="description" maxlength="300"></textarea>
+                <textarea class="form-control" placeholder="Leave a Description here" id="floatingTextarea2" style="height: 100px" name="comment" maxlength="300"></textarea>
             </div>
             <button type="submit" class="btn btn-primary">Post Your Thoughts</button>
         </form>
-    </div>
-</div>
-{% for content in comments %}
-<div class="card">
-    <div class="card-header">
-        {{ content.date }}
-    </div>
-    <div class="card-body">
-        <blockquote class="blockquote mb-0">
-            <p>{{ content.content }}</p>
-            <footer class="blockquote-footer">{{ content.name }}<cite title="Source Title"></cite></footer>
-        </blockquote>
-    </div>
-</div>
-{% empty %}
-<h1>Be the First to Write a Comment</h1>
-{% endfor %}
-{% endif %}
+
+        {% if comments %}
+        {% for comment in comments %}
+        <div class="card">
+            <div class="card-header">
+                {{ comment.created_at }}
+            </div>
+            <div class="card-body">
+                <blockquote class="blockquote mb-0">
+                    <p>{{ comment.comment }}</p>
+                    <footer class="blockquote-footer">{{comment.name_commentor}}<cite title="Source Title"></cite></footer>
+                </blockquote>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <h1 class="text-center mt-4">Be the First to Write a Comment</h1>
+    {% endif %}    
+{%endif%}
 {% endblock %}

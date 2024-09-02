@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator,MinLengthValidator
 from django.utils import timezone
+from datetime import datetime
 
 class Wishlist(models.Model):
         item_id = models.IntegerField()
@@ -23,7 +24,14 @@ class User(AbstractUser):
     def __str__(self):
          return f"Username:{self.username} Email: {self.email} winnings: {self.winning_bids}"
 
-
+class Comments(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.IntegerField(default=0)
+    comment = models.CharField(max_length=300,validators=[MinLengthValidator(1)],default="comment")
+    created_at = models.DateTimeField(auto_now_add=True)
+    name_commentor = models.CharField(max_length=100,validators=[MinLengthValidator(1)],default="Unknown User")
+    def __str__(self):
+         return f"{self.name} wrote {self.comment} at {self.created_at}"
 
 class Placed(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -36,6 +44,7 @@ class Placed(models.Model):
     current_bid = models.FloatField(blank=True,null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     closed = models.BooleanField(default=False)
+    comments = models.ManyToManyField(Comments,blank=True,related_name="winning_bid")
     def __str__(self):
         return f"{self.title}"
 
@@ -45,7 +54,5 @@ class Placed(models.Model):
 
 
 
-class Comments(models.Model):
-    name = models.CharField(max_length=100,validators=[MinLengthValidator(1)])
-    comment = models.CharField(max_length=100,validators=[MinLengthValidator(1)])
-    created_at = models.DateTimeField(auto_now_add=True)
+
+
