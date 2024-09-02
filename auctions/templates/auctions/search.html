@@ -1,19 +1,81 @@
 {% extends "auctions/layout.html" %}
 
 {%block body%}
+<div class="container">
+    
+    <div class="row">
+        
+        <div class="col-md-12">
+            <!--To use the full functionality visit https://www.algolia.com-->
+            <h6 class="text-center">Search your Category</h6>
+            <form id="uploadForm" action="{% url 'search' %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}            
+                <input type="search" name="category" class="form-control" placeholder="Type a Category" list="categories"/>
+                <datalist id="categories">
+                    <option value="Mobile phones">Mobile phones</option>
+                    <option value="Game consoles">Game consoles</option>
+                    <option value="Household furniture">Household furniture</option>
+                    <option value="Home appliances">Home appliances</option>
+                    <option value="Clothing">Clothing</option>
+                    <option value="Snow Sports">Snow Sports</option>
+                    <option value="Camping & Hiking">Camping & Hiking</option>
+                    <option value="Yard Games">Yard Games</option>
+                    <option value="Moisturizers">Moisturizers</option>
+                    <option value="Masks">Masks</option>
+                    <option value="Exfoliators">Exfoliators</option>
+                    <option value="Serums">Serums</option>
+                    <option value="Automotive & Powersports">Automotive & Powersports</option>
+                    <option value="Baby Products">Baby Products</option>
+                    <option value="Camera & Photo">Camera & Photo</option>
+                    <option value="Fine Art">Fine Art</option>
+                    <option value="Grocery & Gourmet Foods">Grocery & Gourmet Foods</option>
+                </datalist>
+            </form>
 
-
-<div class="main-search-input-wrap">
-       
-     
-    <div class="main-search-input fl-wrap">
-                                        <div class="main-search-input-item">
-                                            <input type="text"  value="" placeholder="Search Products...">
-                                        </div>
-                                        
-                                        <button class="main-search-button">Search</button>
-                                    </div>
-                                    
-
-                                    </div>
+            
+        </div>
+        
+    </div>
+    
+    
+</div>
+{% if listings is not None %}
+<div class="container mt-5">
+    <div class="row d-flex justify-content-center">
+        {% for listing in listings %}
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-4 d-flex"> <!-- Adjusted to fit 5 cards per row -->
+                <a href="{% url 'listing' listing.title listing.id %}" class="text-decoration-none text-dark w-100">
+                    <div class="card h-100">
+                        <div class="card-img-container">
+                            {% if listing.url %}
+                                <img class="card-img-top" src="{{ listing.url.url }}" alt="Card image cap">
+                            {% else %}
+                                <p class="text-center">No Image available</p>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ listing.title }}</h5>
+                            <p class="card-text">{{ listing.description }}</p>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Starting Bid: ${{ listing.price }}</li>
+                            {% if listing.current_bid%}
+                            <li class="list-group-item">Current Bid: ${{listing.current_bid}}</li>
+                            {% else %}
+                            <li class="list-group-item">Current Bid: N/A</li>
+                            {% endif %}
+                            <li class="list-group-item">On since {{ listing.created_at }}</li>
+                        </ul>
+                        <div class="card-body text-center">
+                            <button class="btn btn-primary">Add Bidding</button>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        {%endfor%}
+    </div>
+</div>
+{%else%}
+<h1 class="text-center mt-5">No Items for This Category Exist</h1>
+{%endif%}
 {% endblock %}

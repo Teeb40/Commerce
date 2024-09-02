@@ -4,7 +4,7 @@
 {%if user.winning_bids%}
     {% for bid in winnings%}
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <strong>Congratulations!</strong> You have won <a href="{% url 'listing' bid.title bid.id %}">{{ bid.title }}</a> for {{ bid.current_bid }}
+        <strong>Congratulations!</strong> You have won <a href="{% url 'listing' bid.title bid.id %}">{{ bid.title }}</a> for ${{ bid.current_bid }}
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
@@ -46,10 +46,11 @@
                         </div>
                     </a>
                 </div>
+            {%endif%}
             {% empty %}
             <h3 class="text-center">No Listings <a href="{% url 'create' %}">Be the First?</a></h3>
             {% endfor %}
-            {%endif%}
+            
         </div>
     </div>
 {% endblock %}

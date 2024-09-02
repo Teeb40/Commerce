@@ -41,11 +41,11 @@ def index(request):
             return render(request, "auctions/error.html", {"error": "Invalid bid amount"})
 
         # Check if the bid already exists
-        if Bids.objects.filter(item=item_id, username=username, amount=bid_amount).exists():
+        if Bids.objects.filter(item=item_id, name=username, amount=bid_amount).exists():
             return render(request, "auctions/error.html", {"error": "Bid Already Placed"})
 
         # Create a new bid
-        current_bid = Bids.objects.create(item=item_id, amount=bid_amount, username=username)
+        current_bid = Bids.objects.create(item=item_id, amount=bid_amount, name=username)
 
         # Fetch the item and update its current bid
         item = get_object_or_404(Placed, id=item_id)
@@ -134,8 +134,10 @@ def create(request):
             listings_ = Placed(title=title, description=description, price=price, category=category, url=url, user=user)
 
             # Validate the image file extension
-            if url and not str(url).lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif')):
+            if url and not str(url).lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif')) or not url:
                 return render(request, "auctions/create_listing.html", {"not_filled": "Not a Valid Image File"})
+           
+
 
             try:
                 listings_.full_clean()  
@@ -252,4 +254,13 @@ def your_listings(request,username):
     return render(request, "auctions/your_listing.html", {"listings": listings})
 
 def search(request):
-    return render(request, "auctions/search.html", {})
+    if request.method == "POST":
+        category = request.POST.get("category")
+        listings = Placed.objects.filter(category=category,closed=False)
+        if not listings.exists():
+            listings = None
+        return render(request, "auctions/search.html", {"listings":listings})
+ 
+    return render(request, "auctions/search.html")
+
+    
