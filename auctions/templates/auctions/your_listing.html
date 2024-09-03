@@ -6,8 +6,8 @@
         {% if listings %}
             {% for listing in listings %}
                 {% if listing.closed %}
-                <h2>You Have No Open Listings available</h2>
-                {%  else%}
+                
+                {%else%}
                 <div class="col-lg-2 col-md-4 col-sm-6 mb-4 d-flex"> <!-- Adjusted to fit 5 cards per row -->
                     <a href="{% url 'listing' listing.title listing.id %}" class="text-decoration-none text-dark w-100">
                         <div class="card h-100">
